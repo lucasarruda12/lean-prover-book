@@ -171,3 +171,81 @@ example : p ∧ False ↔ False :=
 example : (p → q) → (¬q → ¬p) :=
   fun hpq : p → q =>
     fun hnq : ¬q => fun hp : p => hnq (hpq hp)
+
+
+open Classical
+
+variable (p q r : Prop)
+
+example : (p → q ∨ r) → ((p → q) ∨ (p → r)) :=
+  fun h : p → q ∨ r =>
+  Or.elim (Classical.em q)
+  (fun hq : q =>
+    Or.inl (fun _ : p => hq))
+  (fun hnq : ¬q =>
+    Or.inr
+    (fun hp : p =>
+      Or.elim (h hp)
+      (fun hq : q => False.elim (hnq hq))
+      (fun hr : r => hr)
+    )
+  )
+example : ¬(p ∧ q) → ¬p ∨ ¬q :=
+  fun h : ¬(p ∧ q) =>
+    Or.elim (Classical.em p)
+    (
+      fun hp : p =>
+        Or.elim (Classical.em q)
+        (False.elim ∘ h ∘ (And.intro hp))
+        (Or.inr)
+    )
+    (Or.inl)
+
+example : ¬(p → q) → p ∧ ¬q :=
+  fun hnpq : ¬(p → q) =>
+    Or.elim (Classical.em p)
+    (fun hp : p =>
+      Or.elim (Classical.em q)
+      (fun hq : q =>
+        False.elim (hnpq (fun hp : p => hq))
+      )
+      (And.intro hp)
+    )
+    (fun hnp : ¬p =>
+      False.elim
+      (hnpq (fun hp : p => False.elim (hnp hp)))
+    )
+
+example : (p → q) → (¬p ∨ q) :=
+  fun h : p → q =>
+    Or.elim (Classical.em q)
+    (Or.inr)
+    (fun hnq : ¬q =>
+      Or.inl
+      (fun hp : p => False.elim (hnq (h hp)))
+    )
+
+example : (¬q → ¬p) → (p → q) :=
+  fun h : ¬q → ¬p =>
+    fun hp : p =>
+      Or.elim (Classical.em q)
+      (id)
+      (fun hnq : ¬q => False.elim ((h hnq) hp))
+
+example : p ∨ ¬p :=
+  Classical.em p
+
+example : (((p → q) → p) → p) :=
+  fun h : (p → q) → p =>
+    Classical.byContradiction
+    (fun hnp : ¬p =>
+      have hpq : p → q := fun hp : p => False.elim (hnp hp)
+      have hp : p := h hpq
+      False.elim (hnp hp)
+    )
+
+example : ¬(p ↔ ¬p) :=
+  fun h : p ↔ ¬p =>
+    have hnp : ¬p := fun hp : p => h.mp hp hp
+    have hp := h.mpr hnp
+    False.elim (hnp hp)

@@ -64,3 +64,17 @@ example : (∀ x, r → p x) ↔ (r → ∀ x, p x) :=
   (fun h : (r → ∀ x, p x) =>
     fun x : α => fun hr : r => h hr x
   )
+
+variable (men : Type) (barber : men)
+variable (shaves : men → men → Prop)
+
+example (h : ∀ x : men, shaves barber x ↔ ¬ shaves x x) : False :=
+  have h12 := h barber
+  have h1 : ¬shaves barber barber :=
+    fun h2 : shaves barber barber => h12.mp h2 h2
+  have h2 := h12.mpr h1
+  False.elim (h1 h2)
+-- This should have been a two-line proof,
+-- but i don't know how to import from the
+-- previous exercise file and it's getting late.
+-- sorry!

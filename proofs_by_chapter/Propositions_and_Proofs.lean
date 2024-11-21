@@ -244,7 +244,7 @@ example : (((p → q) → p) → p) :=
       False.elim (hnp hp)
     )
 
-example : ¬(p ↔ ¬p) :=
+theorem p_implies_not_p : ¬(p ↔ ¬p) :=
   fun h : p ↔ ¬p =>
     have hnp : ¬p := fun hp : p => h.mp hp hp
     have hp := h.mpr hnp

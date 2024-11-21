@@ -1,3 +1,5 @@
+import proofs_by_chapter.Propositions_and_Proofs
+
 variable (α : Type) (p q : α → Prop)
 
 example : (∀ x, p x ∧ q x) ↔ (∀ x, p x) ∧ (∀ x, q x) :=
@@ -74,6 +76,7 @@ example (h : ∀ x : men, shaves barber x ↔ ¬ shaves x x) : False :=
     fun h2 : shaves barber barber => h12.mp h2 h2
   have h2 := h12.mpr h1
   False.elim (h1 h2)
+
 -- This should have been a two-line proof,
 -- but i don't know how to import from the
 -- previous exercise file and it's getting late.

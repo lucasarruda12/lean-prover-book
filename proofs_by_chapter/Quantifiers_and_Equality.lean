@@ -94,6 +94,7 @@ end
 
 
 section
+
 -- My auxiliary definitions
 def divides (n m : Nat) : Prop :=
   ∃ k, n * k = m
@@ -104,7 +105,6 @@ def fermat_number (n : Nat) : Prop :=
 
 def odd (n : Nat) : Prop :=
   2 | (n + 1)
-
 -- end
 
 def even (n : Nat) : Prop :=
@@ -136,4 +136,179 @@ def Goldbach's_weak_conjecture : Prop :=
 def Fermat's_last_theorem : Prop :=
   ¬∃ x y z n : Nat, n > 2
     ∧ (x ^ n) + (y ^ n) + (z ^ n) = n
+end
+
+section
+
+open Classical
+
+variable (α : Type) (p q : α → Prop)
+variable (r : Prop)
+
+example : (∃ x : α, r) → r :=
+  fun h : ∃ _: α, r =>
+    Exists.elim h
+    (fun _ : α => fun hr : r => hr)
+
+example (a : α) : r → (∃ x : α, r) :=
+  fun h : r => Exists.intro a h
+
+example : (∃ x, p x ∧ r) ↔ (∃ x, p x) ∧ r :=
+  Iff.intro
+  (fun h : ∃ x, p x ∧ r =>
+    Exists.elim h
+    (fun x : α => fun h : p x ∧ r =>
+      And.intro
+      (Exists.intro x h.left)
+      (h.right)
+    )
+  )
+  (fun h : (∃ x, p x) ∧ r =>
+    Exists.elim h.left
+    (fun x : α => fun hpx : p x =>
+      Exists.intro x (And.intro hpx h.right)
+    )
+  )
+
+example : (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) :=
+  Iff.intro
+  (fun h : ∃ x, p x ∨ q x =>
+    Exists.elim h
+    (fun x : α => fun h : p x ∨ q x =>
+      Or.elim h
+      (fun hpx : p x => Or.inl (Exists.intro x hpx))
+      (fun hqx : q x => Or.inr (Exists.intro x hqx))
+    )
+  )
+  (fun h : (∃ x, p x) ∨ (∃ x, q x) =>
+    Or.elim h
+    (fun hexpx : ∃ x, p x =>
+      Exists.elim hexpx
+      (fun x : α => fun hpx : p x =>
+        Exists.intro x (Or.inl hpx)
+      )
+    )
+    (fun hexqx : ∃ x, q x =>
+      Exists.elim hexqx
+      (fun x : α => fun hqx : q x =>
+        Exists.intro x (Or.inr hqx)
+      )
+    )
+  )
+
+example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) :=
+  Iff.intro
+  (fun h : ∀ x, p x =>
+    fun hxpx : ∃ x, ¬ p x =>
+      Exists.elim hxpx
+      (fun x : α => fun hnpx : ¬ p x =>
+        False.elim (hnpx (h x))
+      )
+  )
+  (fun h : ¬ (∃ x, ¬ p x) =>
+    fun x : α =>
+      Or.elim (Classical.em (p x))
+      (id)
+      (fun hnpx : ¬ p x =>
+        False.elim (h (Exists.intro x hnpx))
+      )
+  )
+
+example : (∃ x, p x) ↔ ¬ (∀ x, ¬ p x) :=
+  Iff.intro
+  (fun h : ∃ x, p x =>
+    fun hfa : ∀ x, ¬ p x =>
+      Exists.elim h
+      (fun (x : α) (hpx : p x) =>
+        False.elim ((hfa x) hpx)
+      )
+  )
+  (fun h : ¬ (∀ x, ¬ p x) =>
+    Classical.byContradiction
+    (fun hnex : ¬ (∃ x, p x) =>
+      have hfax : ∀ x, ¬ p x :=
+        fun x : α =>
+          Or.elim (Classical.em (p x))
+          (fun hpx : p x =>
+            False.elim (hnex (Exists.intro x hpx) )
+          )
+          (id)
+      False.elim (h hfax)
+    )
+  )
+
+example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) :=
+  Iff.intro
+  (fun h : ¬ ∃ x, p x =>
+    fun x : α =>
+      Or.elim (Classical.em (p x))
+      (fun hpx : p x =>
+        False.elim (h (Exists.intro x hpx)))
+      (id)
+  )
+  (fun h : ∀ x, ¬ p x =>
+    fun hxpx : ∃ x, p x =>
+      Exists.elim hxpx
+      (fun (x : α) (hpx : p x) =>
+        False.elim (h x (hpx))
+      )
+  )
+
+example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) :=
+  Iff.intro
+  (fun h : ¬ ∀ x, p x =>
+    Classical.byContradiction
+    (fun hne : ¬ (∃ x, ¬ p x) =>
+      have hnfann : ∀ x, ¬ ¬ p x :=
+        fun (x : α) (hnpx : ¬ p x) =>
+          False.elim (hne (Exists.intro x hnpx))
+
+      have hnfa : ∀ x, p x :=
+        fun x : α => Classical.not_not.mp (hnfann x)
+
+      False.elim (h hnfa)
+    )
+  )
+  (fun h : ∃ x, ¬ p x =>
+    fun hfaxpx : ∀ x, p x =>
+      Exists.elim h
+      (fun (x : α) (hnpx : ¬ p x) =>
+        hnpx (hfaxpx x)
+      )
+  )
+
+example : (∀ x, p x → r) ↔ (∃ x, p x) → r :=
+  Iff.intro
+  (fun h : ∀ x, p x → r =>
+    fun hexpx : ∃ x, p x =>
+      Exists.elim hexpx
+      (fun (x : α) (hpx : p x) =>
+        (h x) hpx
+      )
+  )
+  (fun h : (∃ x, p x) → r =>
+    fun x : α => fun hpx : p x =>
+      h (Exists.intro x hpx)
+  )
+example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
+  Iff.intro
+  (fun (h : ∃x, p x → r) (h2 : ∀ x, p x) =>
+    Exists.elim h
+    (fun (x : α) (hpxr : p x → r) => hpxr (h2 x))
+  )
+  (fun (h : (∀ x, p x) → r) =>
+    sorry -- Classical ?
+  )
+example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
+  Iff.intro
+  (fun h : ∃ x, r → p x =>
+    fun hr : r =>
+      Exists.elim h
+      (fun (x : α) (hrpx : r → p x) =>
+        Exists.intro x (hrpx hr)
+      )
+  )
+  (sorry)
+
+
 end

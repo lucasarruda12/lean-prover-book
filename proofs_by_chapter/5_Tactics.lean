@@ -98,13 +98,71 @@ example : (p → (q → r)) ↔ (p ∧ q → r) := by
     intros h hp hq
     exact h ⟨hp, hq⟩
 
-example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := sorry
-example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
-example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
-example : ¬(p ∧ ¬p) := sorry
-example : p ∧ ¬q → ¬(p → q) := sorry
-example : ¬p → (p → q) := sorry
-example : (¬p ∨ q) → (p → q) := sorry
-example : p ∨ False ↔ p := sorry
-example : p ∧ False ↔ False := sorry
-example : (p → q) → (¬q → ¬p) := sorry
+example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := by
+  apply Iff.intro
+  case mp =>
+    intro h
+    exact ⟨h ∘ Or.inl , h ∘ Or.inr⟩
+  case mpr =>
+    intro h
+    intro
+    | Or.inl hq => exact h.left hq
+    | Or.inr hr => exact h.right hr
+
+example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := by
+  apply Iff.intro
+  case mp =>
+    intro h
+    exact ⟨h ∘ Or.inl, h ∘ Or.inr⟩
+  case mpr =>
+    intro h
+    intro
+    | Or.inl hp => exact h.left hp
+    | Or.inr hq => exact h.right hq
+
+example : ¬p ∨ ¬q → ¬(p ∧ q) := by
+  intro
+  | Or.inl hnp =>
+    intro ⟨hp, _⟩
+    exact hnp hp
+  | Or.inr hnq =>
+    intro ⟨_, hq⟩
+    exact hnq hq
+
+example : ¬(p ∧ ¬p) := by
+  intro ⟨p, np⟩
+  exact np p
+
+example : p ∧ ¬q → ¬(p → q) := by
+  intro ⟨hp, hnq⟩ h
+  exact (hnq ∘ h) hp
+
+example : ¬p → (p → q) := by
+  intro hnp hp
+  contradiction
+
+example : (¬p ∨ q) → (p → q) := by
+  intro h hp
+  match h with
+  | Or.inl hnp => contradiction
+  | Or.inr hq  => exact hq
+
+example : p ∨ False ↔ p := by
+  apply Iff.intro
+  case mp =>
+    intro
+    | Or.inl hp => exact hp
+    | Or.inr f => contradiction
+  case mpr =>
+    exact Or.inl
+
+example : p ∧ False ↔ False := by
+  apply Iff.intro
+  case mp => exact And.right
+  case mpr =>
+    intro hf
+    contradiction
+
+example : (p → q) → (¬q → ¬p) := by
+  intro hpq hnq hp
+  exact (hnq ∘ hpq) hp

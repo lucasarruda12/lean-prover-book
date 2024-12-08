@@ -166,3 +166,82 @@ example : p ∧ False ↔ False := by
 example : (p → q) → (¬q → ¬p) := by
   intro hpq hnq hp
   exact (hnq ∘ hpq) hp
+
+-- 3.2
+open Classical
+
+variable (p q r : Prop)
+
+example : (p → q ∨ r) → ((p → q) ∨ (p → r)) := by
+  intro hpqor
+  match Classical.em q with
+  | Or.inl hq  =>
+    apply Or.inl
+    intro _
+    exact hq
+  | Or.inr hnq =>
+    apply Or.inr
+    intro hp
+    match hpqor hp with
+    | Or.inl hq => contradiction
+    | Or.inr hr => exact hr
+
+
+example : ¬(p ∧ q) → ¬p ∨ ¬q := by
+  intro h
+  match Classical.em p with
+  | Or.inl hp  =>
+    apply Or.inr
+    intro hq
+    exact h ⟨hp, hq⟩
+  | Or.inr hnp => exact Or.inl hnp
+
+example : ¬(p → q) → p ∧ ¬q := by
+  intro hnpq
+  match Classical.em p with
+  | Or.inl hp =>
+    match Classical.em q with
+    | Or.inl hq =>
+      have hpq : p → q := fun _ => hq
+      contradiction
+    | Or.inr hnq =>
+      exact ⟨hp, hnq⟩
+  | Or.inr hnp =>
+    have hpq : p → q := fun (hp : p) => False.elim (hnp hp)
+    contradiction
+
+example : (p → q) → (¬p ∨ q) := by
+  intro hpq
+  match Classical.em p with
+  | Or.inl hp  => exact Or.inr (hpq hp)
+  | Or.inr hnp => exact Or.inl hnp
+
+example : (¬q → ¬p) → (p → q) := by
+  intro hnqnp hp
+  match Classical.em q with
+  | Or.inl hq  => exact hq
+  | Or.inr hnq =>
+    exact False.elim (hnqnp hnq hp)
+
+example : p ∨ ¬p := by
+  exact Classical.em p
+
+example : (((p → q) → p) → p) := by
+  intro h
+  apply byContradiction
+  intro hnp
+  have hpq : p → q := by
+    intro hp
+    contradiction
+  exact False.elim $ hnp $ h hpq -- Lean also understands the $ :O
+
+-- 3.3
+
+example : ¬(p ↔ ¬p) := by
+  intro h
+  have hnp : ¬p := by
+    intro hp
+    have hnp' := h.mp hp
+    exact False.elim (hnp' hp)
+  have hp := h.mpr hnp
+  exact False.elim (hnp hp)

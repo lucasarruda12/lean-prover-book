@@ -207,7 +207,7 @@ example : ¬(p → q) → p ∧ ¬q :=
     (fun hp : p =>
       Or.elim (Classical.em q)
       (fun hq : q =>
-        False.elim (hnpq (fun hp : p => hq))
+        False.elim (hnpq (fun _ : p => hq))
       )
       (And.intro hp)
     )

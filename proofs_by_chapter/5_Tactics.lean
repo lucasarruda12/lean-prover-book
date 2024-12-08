@@ -1,4 +1,4 @@
--- Redoing chapter three with tactics!
+section -- Redoing chapter three with tactics!
 
 variable (p q r : Prop)
 
@@ -245,3 +245,40 @@ example : ¬(p ↔ ¬p) := by
     exact False.elim (hnp' hp)
   have hp := h.mpr hnp
   exact False.elim (hnp hp)
+
+end -- End of chapter three
+
+section -- Chapter four!
+
+variable (α : Type) (p q : α → Prop)
+
+example : (∀ x, p x ∧ q x) ↔ (∀ x, p x) ∧ (∀ x, q x) := by
+  apply Iff.intro
+  case mp =>
+    intro faxpxqx
+    apply And.intro
+    case left =>
+      intro x
+      exact (faxpxqx x).left
+    case right =>
+      intro x
+      exact (faxpxqx x).right
+  case mpr =>
+    intro ⟨hpx, hqx⟩
+    intro x
+    exact ⟨hpx x, hqx x⟩
+
+example : (∀ x, p x → q x) → (∀ x, p x) → (∀ x, q x) := by
+  intro hpxqx hpx x
+  exact (hpxqx x) (hpx x)
+
+example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x := by
+  intro
+  | Or.inl hpx =>
+    intro x
+    exact Or.inl (hpx x)
+  | Or.inr hqx =>
+    intro x
+    exact Or.inr (hqx x)
+
+end

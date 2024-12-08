@@ -34,7 +34,7 @@ section
   variable (α : Type) (p q : α → Prop)
   variable (r : Prop)
 
-  example : α → ((∀ x : α, r) ↔ r) :=
+  example : α → ((∀ _ : α, r) ↔ r) :=
     fun a : α =>
       Iff.intro
       (fun h : (∀ _ : α, r) => h a)
@@ -145,12 +145,12 @@ open Classical
 variable (α : Type) (p q : α → Prop)
 variable (r : Prop)
 
-example : (∃ x : α, r) → r :=
+example : (∃ _ : α, r) → r :=
   fun h : ∃ _: α, r =>
     Exists.elim h
     (fun _ : α => fun hr : r => hr)
 
-example (a : α) : r → (∃ x : α, r) :=
+example (a : α) : r → (∃ _ : α, r) :=
   fun h : r => Exists.intro a h
 
 example : (∃ x, p x ∧ r) ↔ (∃ x, p x) ∧ r :=
@@ -290,6 +290,7 @@ example : (∀ x, p x → r) ↔ (∃ x, p x) → r :=
     fun x : α => fun hpx : p x =>
       h (Exists.intro x hpx)
   )
+
 example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   Iff.intro
   (fun (h : ∃x, p x → r) (h2 : ∀ x, p x) =>
@@ -297,7 +298,17 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
     (fun (x : α) (hpxr : p x → r) => hpxr (h2 x))
   )
   (fun (h : (∀ x, p x) → r) =>
-    sorry -- Classical ?
+    Or.elim (Classical.em (∀ x, p x))
+    (fun faxpx : ∀ x, p x =>
+      have hr : r := h faxpx
+      Exists.intro a (fun _ : p a => hr)
+    )
+    (fun nfaxpx : ¬∀ x, p x =>
+      Exists.elim ((Iff.mp Classical.not_forall) nfaxpx)
+      (fun (x : α) (hnpx : ¬p x) =>
+        Exists.intro x (False.elim ∘ hnpx)
+      )
+    )
   )
 example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
   Iff.intro
@@ -308,7 +319,18 @@ example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
         Exists.intro x (hrpx hr)
       )
   )
-  (sorry)
-
+  (fun h : r → ∃ x, p x =>
+    Or.elim (Classical.em r)
+    (fun hr : r =>
+      have expx : ∃x, p x := h hr
+      Exists.elim (expx)
+      (fun (x : α) (hpx : p x) =>
+        Exists.intro x (fun _ : r => hpx)
+      )
+    )
+    (fun hnr : ¬r =>
+      Exists.intro a (fun hr : r => False.elim (hnr hr))
+    )
+  )
 
 end

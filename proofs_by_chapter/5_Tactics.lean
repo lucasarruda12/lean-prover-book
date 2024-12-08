@@ -281,4 +281,48 @@ example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x := by
     intro x
     exact Or.inr (hqx x)
 
+variable (α : Type) (p q : α → Prop)
+variable (r : Prop)
+
+example : α → ((∀ _: α, r) ↔ r) := by
+  intro a
+  apply Iff.intro
+  case mp  =>
+    intro har
+    exact har a
+  case mpr =>
+    intro hr _
+    exact hr
+
+example : (∀ x, p x ∨ r) ↔ (∀ x, p x) ∨ r := by
+  apply Iff.intro
+  case mp =>
+    intro hpxr
+    match Classical.em r with
+    | Or.inl hr  => exact Or.inr hr
+    | Or.inr hnr =>
+      have hpx : ∀ x, p x := by
+        intro a
+        match hpxr a with
+        | Or.inl hpx => exact hpx
+        | Or.inr hr  => exact False.elim (hnr hr)
+      exact Or.inl hpx
+  case mpr =>
+    intro
+    | Or.inl hpx =>
+      intro a
+      exact Or.inl (hpx a)
+    | Or.inr hr =>
+      intro a
+      exact Or.inr hr
+
+example : (∀ x, r → p x) ↔ (r → ∀ x, p x) := by
+  apply Iff.intro
+  case mp  =>
+    intro hrpx hr a
+    exact hrpx a hr
+  case mpr =>
+    intro hrpx a hr
+    exact hrpx hr a
+
 end

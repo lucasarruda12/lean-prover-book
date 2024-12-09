@@ -248,7 +248,7 @@ example : ¬(p ↔ ¬p) := by
 
 end -- End of chapter three
 
-section -- Chapter four!
+section -- 4.1
 
 variable (α : Type) (p q : α → Prop)
 
@@ -324,5 +324,173 @@ example : (∀ x, r → p x) ↔ (r → ∀ x, p x) := by
   case mpr =>
     intro hrpx a hr
     exact hrpx hr a
+
+end -- 4.1
+
+section --barber!
+
+variable (men : Type) (barber : men)
+variable (shaves : men → men → Prop)
+
+example (h : ∀ x : men, shaves barber x ↔ ¬ shaves x x) : False := by
+  have who_shaves_barber := h barber
+  -- Shameless copy-paste from previous chapter :P
+  have hnp : ¬shaves barber barber := by
+    intro hp
+    have hnp' := who_shaves_barber.mp hp
+    exact False.elim (hnp' hp)
+  have hp := who_shaves_barber.mpr hnp
+  exact False.elim (hnp hp)
+
+end --barber!
+
+section -- 4.4
+open Classical
+
+variable (α : Type) (p q : α → Prop)
+variable (r : Prop)
+
+example : (∃ _ : α, r) → r := by
+  intro ⟨_, hr⟩
+  exact hr
+
+example (a : α) : r → (∃ _ : α, r) := by
+  intro hr
+  exact ⟨a, hr⟩
+
+example : (∃ x, p x ∧ r) ↔ (∃ x, p x) ∧ r := by
+  apply Iff.intro
+  case mp  =>
+    intro ⟨x, ⟨hpx, hr⟩⟩
+    exact ⟨⟨x, hpx⟩, hr⟩
+  case mpr =>
+    intro ⟨⟨x, hpx⟩, hr⟩
+    exact ⟨x, ⟨hpx, hr⟩⟩
+
+example : (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) := by
+  apply Iff.intro
+  case mp =>
+    intro
+    | ⟨x, Or.inl hpx⟩ => exact Or.inl ⟨x, hpx⟩
+    | ⟨x, Or.inr hqx⟩ => exact Or.inr ⟨x, hqx⟩
+  case mpr =>
+    intro
+    | Or.inl ⟨x, hpx⟩ => exact ⟨x, Or.inl hpx⟩
+    | Or.inr ⟨x, hqx⟩ => exact ⟨x, Or.inr hqx⟩
+
+
+example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) := by
+  apply Iff.intro
+  case mp =>
+    intro hfaxpx
+    intro ⟨x, hnpx⟩
+    have hpx := hfaxpx x
+    contradiction
+  case mpr =>
+    intro hnexnpx
+    intro x
+    apply Classical.byContradiction
+    intro hnpx
+    exact hnexnpx ⟨x, hnpx⟩
+
+example : (∃ x, p x) ↔ ¬ (∀ x, ¬ p x) := by
+  apply Iff.intro
+  case mp  =>
+    intro ⟨x, hpx⟩
+    intro h
+    have hnpx := h x
+    contradiction
+  case mpr =>
+    intro h
+    apply Classical.byContradiction
+    intro nexpx
+    have faxnpx : ∀ x, ¬ p x := by
+      intro x hpx
+      have expx : ∃ x, p x := ⟨x, hpx⟩
+      contradiction
+    contradiction
+
+example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) := by
+  apply Iff.intro
+  case mp =>
+    intro nexpx
+    intro x hpx
+    have expx : ∃ x, p x := ⟨x, hpx⟩
+    contradiction
+  case mpr =>
+    intro faxnpx
+    intro ⟨x, hpx⟩
+    have hnpx := faxnpx x
+    contradiction
+
+example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := by
+  apply Iff.intro
+  case mp =>
+    intro nfaxpx
+    apply Classical.byContradiction
+    intro nexnpx
+    have faxpx : ∀x, p x := by
+      intro x
+      apply Classical.byContradiction
+      intro hnpx
+      have exnpx : ∃ x, ¬ p x := ⟨x, hnpx⟩
+      contradiction
+    contradiction
+  case mpr =>
+    intro ⟨x, hnpx⟩
+    intro faxpx
+    have hpx := faxpx x
+    contradiction
+
+example : (∀ x, p x → r) ↔ (∃ x, p x) → r := by
+  apply Iff.intro
+  case mp  =>
+    intro faxpxr
+    intro ⟨x, px⟩
+    exact faxpxr x px
+  case mpr =>
+    intro h
+    intro x px
+    exact h ⟨x, px⟩
+
+example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r := by
+  apply Iff.intro
+  case mp =>
+    intro ⟨x, hpxr⟩
+    intro faxpx
+    exact hpxr (faxpx x)
+  case mpr =>
+    intro faxpxr
+    match Classical.em (∀x, p x) with
+    | Or.inl faxpx  =>
+      have hpar : p a → r := fun _ => faxpxr faxpx
+      exact ⟨a, hpar⟩
+    | Or.inr nfaxpx =>
+      have ⟨x, hnpx⟩ : ∃ x, ¬ p x := by
+        apply Classical.not_forall.mp
+        exact nfaxpx
+      have hpxr : p x → r := by
+        intro hpx
+        contradiction
+      exact ⟨x, hpxr⟩
+
+
+example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) := by
+  apply Iff.intro
+  case mp =>
+    intro ⟨x, hrpx⟩
+    intro hr
+    exact ⟨x, hrpx hr⟩
+  case mpr =>
+    intro hrexpx
+    match Classical.em r with
+    | Or.inl hr  =>
+      have ⟨x, hpx⟩ := hrexpx hr
+      exact ⟨x, fun _ => hpx⟩
+    | Or.inr hnr =>
+      have hrpa : r → p a := by
+        intro hr
+        contradiction
+      exact ⟨a, hrpa⟩
 
 end

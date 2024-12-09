@@ -494,3 +494,11 @@ example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) := by
       exact ⟨a, hrpa⟩
 
 end
+
+section -- 5.2
+
+example (p q r : Prop) (hp : p)
+        : (p ∨ q ∨ r) ∧ (q ∨ p ∨ r) ∧ (q ∨ r ∨ p) := by
+  exact ⟨Or.inl hp, ⟨Or.inr (Or.inl hp), Or.inr (Or.inr hp)⟩⟩
+
+end

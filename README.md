@@ -3,8 +3,8 @@ My solutions to the exercises from [Theorem Proving in Lean 4](https://leanprove
 
 | chapter | did/done/doing |
 | ------- | -------------- |
+| Dependent Type Theory         | ---- |
 | Propositions and Proofs       | done |
-| Dependent Type Theory         | done |
 | Quantifiers and Equality      | done |
 | Tactics                       | done |
 | Interacting with Lean         | ---- |
